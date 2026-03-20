@@ -24,10 +24,21 @@
       </template>
     </el-upload>
 
-    <div v-if="uploadStatus" class="upload-status">
-      <el-tag :type="uploadStatus.type" closable @close="uploadStatus = null">
-        {{ uploadStatus.message }}
-      </el-tag>
+    <div v-if="uploadStatus" class="upload-status-action">
+      <div v-if="uploadStatus.type === 'success'" class="success-action-bar">
+        <el-button type="success" size="large" @click="goToGame" class="quick-jump-btn">
+          ✅ {{ uploadStatus.message }}，点击开始消消乐
+        </el-button>
+      </div>
+
+      <el-alert
+          v-else
+          :title="uploadStatus.message"
+          :type="uploadStatus.type"
+          show-icon
+          closable
+          @close="uploadStatus = null"
+      />
     </div>
 
     <div v-if="vocabStore.vocabList.length" class="vocab-preview">
@@ -64,11 +75,13 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRouter } from 'vue-router'
 import { ElUpload, ElTag, ElButton, ElIcon, ElMessage } from 'element-plus';
 import { UploadFilled, List } from '@element-plus/icons-vue';
 import { useVocabStore } from '@/stores/vocab';
 import type { VocabItem } from '@/stores/vocab';
 
+const router = useRouter();
 const vocabStore = useVocabStore();
 
 const fileList = ref<any[]>([]);
@@ -136,10 +149,20 @@ const handleFileChange = async (uploadFile: any) => {
   try {
     const newVocabList = await parseTxtFile(file);
     vocabStore.setVocabList(newVocabList);
+
+    // 💡 1. 顶部弹出提示框
+    ElMessage({
+      message: `成功导入 ${newVocabList.length} 组词汇！`,
+      type: 'success',
+      duration: 3000
+    });
+
+    // 💡 2. 设置状态，用于显示下方的跳转按钮
     uploadStatus.value = {
       type: 'success',
-      message: `成功导入 ${newVocabList.length} 组词汇`
+      message: `导入成功`
     };
+
     fileList.value = [uploadFile];
   } catch (error) {
     uploadStatus.value = {
@@ -174,6 +197,10 @@ const removeVocab = (index: number) => {
     type: 'info',
     message: `已移除词汇：${removedName}`
   };
+};
+
+const goToGame = () => {
+  router.push('/english');
 };
 </script>
 
@@ -242,5 +269,42 @@ const removeVocab = (index: number) => {
 .vocab-list::-webkit-scrollbar-thumb {
   background: #dcdfe6;
   border-radius: 3px;
+}
+
+/* 💡 关键修改：确保容器能够水平居中 */
+.upload-status-action {
+  margin-top: 25px;
+  display: flex;
+  justify-content: center; /* 水平居中 */
+  align-items: center;
+  width: 100%; /* 撑开宽度 */
+}
+
+.success-action-bar {
+  display: inline-block; /* 保证容器随按钮大小缩放 */
+  animation: fadeIn 0.4s ease;
+}
+
+.quick-jump-btn {
+  padding: 15px 40px; /* 稍微加大一点点击区域 */
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 10px;
+  /* 保持与你上传成功图标一致的绿色 */
+  background-color: #67C23A;
+  border-color: #67C23A;
+  box-shadow: 0 4px 15px rgba(103, 194, 58, 0.4);
+  transition: all 0.3s ease;
+}
+
+.quick-jump-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(103, 194, 58, 0.5);
+  background-color: #85ce61;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>
