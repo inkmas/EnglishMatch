@@ -23,6 +23,11 @@
               size="large"
               class="custom-input"
           />
+
+          <div class="quick-presets">
+            <el-button @click="tempCount = 40" size="small" plain round>快捷设置 40人</el-button>
+            <el-button @click="tempCount = 50" size="small" plain round>快捷设置 50人</el-button>
+          </div>
         </div>
 
         <el-button
@@ -123,4 +128,19 @@ const handleSave = () => {
   height: 45px;
   font-weight: bold;
 }
+
+.input-section {
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 居中对齐 */
+}
+
+/* 新增：快捷按钮样式 */
+.quick-presets {
+  margin-top: 15px;
+  display: flex;
+  gap: 12px;
+}
+
 </style>
