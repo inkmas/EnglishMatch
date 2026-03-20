@@ -54,7 +54,7 @@ const handleSave = () => {
     // 调用新增的兼容性 API
     studentStore.updateByCount(tempCount.value)
     ElMessage({
-      message: '学号名单已自动重置',
+      message: `设置成功：当前总人数已改为 ${tempCount.value} 人`,
       type: 'success',
       plain: true
     })

@@ -17,9 +17,16 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 
-const activeIndex = ref('1')
+const route = useRoute()
+
+const activeIndex = computed(() => {
+  const { path } = route
+  return path
+})
+
 const handleSelect = (key: string, keyPath: string[]) => {
   console.log(key, keyPath)
 }
