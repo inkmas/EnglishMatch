@@ -1,5 +1,5 @@
 <template>
-  <div class="english-match-container">
+  <div class="english-match-container" :class="{ 'is-empty': !vocabStore.vocabList.length }">
     <div class="game-main" v-if="vocabStore.vocabList.length">
       <h1 class="game-title">🎮 英语消消乐</h1>
 
@@ -31,6 +31,7 @@
       <el-empty description="暂无词汇数据，请先上传词汇文件 📄" />
       <el-button
           type="primary"
+          size="large"
           class="goto-upload-btn"
           @click="handleGotoUpload"
       >
@@ -61,7 +62,6 @@ import { ElDialog, ElButton, ElEmpty, ElMessage, ElMessageBox } from 'element-pl
 import { useVocabStore } from '@/stores/vocab';
 import { useRouter } from 'vue-router';
 
-// 初始化
 const router = useRouter();
 const vocabStore = useVocabStore();
 
@@ -71,17 +71,14 @@ interface BubbleItem {
   color: string;
 }
 
-// 响应式状态
 const bubbleList = ref<BubbleItem[]>([]);
 const selectedIndexes = ref<number[]>([]);
 const hiddenIndexes = ref<number[]>([]);
 const gameStarted = ref(false);
 const elapsedSeconds = ref(0);
-// 💡 修复：将类型改为 number | undefined 解决 NodeJS 报错
 const timerInterval = ref<number | undefined>(undefined);
 const gameOverVisible = ref(false);
 
-// 时间格式化
 const formattedTime = computed(() => {
   const m = Math.floor(elapsedSeconds.value / 60).toString().padStart(2, '0');
   const s = (elapsedSeconds.value % 60).toString().padStart(2, '0');
@@ -93,7 +90,6 @@ const getRandomColor = () => {
   return `hsl(${hue}, 70%, 60%)`;
 };
 
-// 停止计时器封装
 const stopTimer = () => {
   if (timerInterval.value !== undefined) {
     window.clearInterval(timerInterval.value);
@@ -101,7 +97,6 @@ const stopTimer = () => {
   }
 };
 
-// 初始化游戏
 const initGame = () => {
   selectedIndexes.value = [];
   hiddenIndexes.value = [];
@@ -132,30 +127,24 @@ const startTimer = () => {
 
 const handleBubbleClick = (index: number) => {
   if (selectedIndexes.value.includes(index) || hiddenIndexes.value.includes(index)) return;
-
   if (!gameStarted.value) startTimer();
 
   selectedIndexes.value.push(index);
 
   if (selectedIndexes.value.length === 2) {
     const [i1, i2] = selectedIndexes.value;
-
-    if (i1 === undefined || i2 === undefined || isNaN(i1) || isNaN(i2)) {
-      selectedIndexes.value = []; // 重置选中状态
-      ElMessage.warning('选中状态异常，请重新选择');
+    if (i1 === undefined || i2 === undefined) {
+      selectedIndexes.value = [];
       return;
     }
-
 
     const b1 = bubbleList.value[i1];
     const b2 = bubbleList.value[i2];
 
-    // 💡 修复：增加非空校验 b1 && b2
     if (b1 && b2 && b1.pair === b2.text) {
       setTimeout(() => {
         hiddenIndexes.value.push(i1, i2);
         selectedIndexes.value = [];
-
         if (hiddenIndexes.value.length === bubbleList.value.length) {
           stopTimer();
           gameOverVisible.value = true;
@@ -181,7 +170,7 @@ const resetGame = () => {
 };
 
 const handleGotoUpload = () => {
-  router.push('/vocab-upload');
+  router.push('/upload'); // 确保这里的路径和你 router 配置的一致
 };
 
 watch(() => vocabStore.vocabList, (list) => {
@@ -196,14 +185,30 @@ onUnmounted(stopTimer);
 .english-match-container {
   padding: 40px 20px;
   background-color: #f0f2f5;
+  /* 确保占据全高，减去 header 高度 */
   min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* 当没有数据时，开启 Flex 居中 */
+.english-match-container.is-empty {
+  justify-content: center;
+  align-items: center;
+}
+
+.game-main {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .game-title {
   text-align: center;
   color: #1a1a1a;
   font-size: 2.5rem;
-  margin-bottom: 10px;
+  margin: 0 0 10px 0;
 }
 
 .timer-box {
@@ -223,8 +228,7 @@ onUnmounted(stopTimer);
   grid-template-columns: repeat(auto-fill, minmax(120px, 120px));
   gap: 20px;
   justify-content: center;
-  max-width: 1000px;
-  margin: 0 auto 40px;
+  margin-bottom: 40px;
 }
 
 .bubble {
@@ -261,6 +265,18 @@ onUnmounted(stopTimer);
 
 .game-actions {
   text-align: center;
+  margin-bottom: 20px;
+}
+
+.empty-tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 移除原来的 margin-top */
+}
+
+.goto-upload-btn {
+  margin-top: -10px; /* 稍微向上靠拢 empty 图片 */
 }
 
 .game-over-content {

@@ -138,7 +138,14 @@ const startSpin = () => {
 
   setTimeout(() => {
     isSpinning.value = false
-    winner.value = studentStore.currentStudents[randomIndex]
+    const selectedStudent = studentStore.currentStudents[randomIndex]
+
+    if (selectedStudent) {
+      winner.value = selectedStudent
+    } else {
+      // 可选：处理未找到学生的情况
+      console.warn('未能找到选中的学生')
+    }
   }, 4000)
 }
 </script>
