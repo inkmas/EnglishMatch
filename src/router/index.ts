@@ -9,6 +9,10 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     {
+      path: '/',
+      redirect: '/english'
+    },
+    {
       path: '/wheel',
       name: 'wheel',
       component: WheelView
