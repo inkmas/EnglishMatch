@@ -7,15 +7,30 @@
         游戏用时：<span class="timer-text">{{ formattedTime }}</span>
       </div>
 
-      <div class="bubble-container">
+      <div class="bubble-container" ref="containerRef">
+        <svg class="connection-layer" v-if="lineCoords">
+          <line
+              :x1="lineCoords.x1" :y1="lineCoords.y1"
+              :x2="lineCoords.x2" :y2="lineCoords.y2"
+              stroke="#409eff"
+              stroke-width="8"
+              stroke-linecap="round"
+              class="connection-line"
+          />
+        </svg>
+
         <div
             v-for="(item, index) in bubbleList"
             :key="index"
+            :ref="(el) => (bubbleRefs[index] = el)"
             class="bubble"
-            :class="{ selected: selectedIndexes.includes(index) }"
+            :class="{
+              selected: selectedIndexes.includes(index),
+              'match-success': isMatchSuccess && selectedIndexes.includes(index),
+              'is-hidden': hiddenIndexes.includes(index)
+            }"
             :style="{ backgroundColor: item.color }"
             @click="handleBubbleClick(index)"
-            v-show="!hiddenIndexes.includes(index)"
         >
           <span class="bubble-text">{{ item.text }}</span>
         </div>
@@ -79,6 +94,11 @@ const elapsedSeconds = ref(0);
 const timerInterval = ref<number | undefined>(undefined);
 const gameOverVisible = ref(false);
 
+const containerRef = ref<HTMLElement | null>(null);
+const bubbleRefs = ref<any[]>([]); // 存储气泡的 DOM 引用
+const lineCoords = ref<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
+const isMatchSuccess = ref(false);
+
 const formattedTime = computed(() => {
   const m = Math.floor(elapsedSeconds.value / 60).toString().padStart(2, '0');
   const s = (elapsedSeconds.value % 60).toString().padStart(2, '0');
@@ -126,11 +146,16 @@ const startTimer = () => {
 };
 
 const handleBubbleClick = (index: number) => {
+  // 1. 基础拦截：已选中或已隐藏的不触发
   if (selectedIndexes.value.includes(index) || hiddenIndexes.value.includes(index)) return;
+
+  // 2. 第一次点击启动计时
   if (!gameStarted.value) startTimer();
 
+  // 3. 记录点击索引
   selectedIndexes.value.push(index);
 
+  // 4. 当选中两个气泡时进行逻辑判断
   if (selectedIndexes.value.length === 2) {
     const [i1, i2] = selectedIndexes.value;
     if (i1 === undefined || i2 === undefined) {
@@ -142,19 +167,61 @@ const handleBubbleClick = (index: number) => {
     const b2 = bubbleList.value[i2];
 
     if (b1 && b2 && b1.pair === b2.text) {
+      // ✅ 匹配成功
+      isMatchSuccess.value = true;
+
+      // 💡 核心修改：延迟 50ms 计算连线
+      // 理由：点击后 bubble 会立即触发 .selected 的 scale(1.1) 动画。
+      // 稍微延迟可以避开浏览器布局抖动的最高峰，使 getBoundingClientRect 抓取更稳。
+      setTimeout(() => {
+        calculateLine(i1, i2);
+      }, 50);
+
+      // 500ms 后移除气泡和连线
       setTimeout(() => {
         hiddenIndexes.value.push(i1, i2);
         selectedIndexes.value = [];
+        lineCoords.value = null; // 清除连线
+        isMatchSuccess.value = false;
+
         if (hiddenIndexes.value.length === bubbleList.value.length) {
           stopTimer();
           gameOverVisible.value = true;
         }
-      }, 300);
+      }, 550);
     } else {
+      // ❌ 匹配失败：500ms 后清空选中状态
       setTimeout(() => {
         selectedIndexes.value = [];
       }, 500);
     }
+  }
+};
+
+const calculateLine = (idx1: number, idx2: number) => {
+  const el1 = bubbleRefs.value[idx1];
+  const el2 = bubbleRefs.value[idx2];
+  const container = containerRef.value;
+
+  if (el1 && el2 && container) {
+    const rect1 = el1.getBoundingClientRect();
+    const rect2 = el2.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    // 💡 核心修正：
+    // 使用 scrollLeft/Top 补偿或者确保计算的是元素的中心点
+    // 考虑到 scale(1.1) 会让 rect 的 left/top 发生偏移
+    // 我们手动计算不受缩放影响的中心点：
+
+    const centerX = (rect: DOMRect) => rect.left + rect.width / 2 - containerRect.left;
+    const centerY = (rect: DOMRect) => rect.top + rect.height / 2 - containerRect.top;
+
+    lineCoords.value = {
+      x1: centerX(rect1),
+      y1: centerY(rect1),
+      x2: centerX(rect2),
+      y2: centerY(rect2)
+    };
   }
 };
 
@@ -177,60 +244,47 @@ watch(() => vocabStore.vocabList, (list) => {
   if (list.length) initGame();
 }, { deep: true });
 
+watch(() => bubbleList.value, () => {
+  bubbleRefs.value = [];
+});
+
 onMounted(initGame);
 onUnmounted(stopTimer);
 </script>
 
 <style scoped>
+/* 1. 基础容器布局 */
 .english-match-container {
   padding: 40px 20px;
   background-color: #f0f2f5;
-  /* 确保占据全高，减去 header 高度 */
   min-height: calc(100vh - 60px);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 }
 
-/* 当没有数据时，开启 Flex 居中 */
 .english-match-container.is-empty {
   justify-content: center;
   align-items: center;
 }
 
-.game-main {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-}
+.game-main { width: 100%; max-width: 1200px; margin: 0 auto; }
+.game-title { text-align: center; color: #1a1a1a; font-size: 2.5rem; margin: 0 0 10px 0; }
+.timer-box { text-align: center; margin-bottom: 30px; font-size: 1.2rem; }
+.timer-text { color: #409eff; font-family: monospace; font-weight: bold; }
 
-.game-title {
-  text-align: center;
-  color: #1a1a1a;
-  font-size: 2.5rem;
-  margin: 0 0 10px 0;
-}
-
-.timer-box {
-  text-align: center;
-  margin-bottom: 30px;
-  font-size: 1.2rem;
-}
-
-.timer-text {
-  color: #409eff;
-  font-family: monospace;
-  font-weight: bold;
-}
-
+/* 2. 气泡容器 - 间距已调大 */
 .bubble-container {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 120px));
-  gap: 20px;
+  gap: 40px; /* 间距变大 */
   justify-content: center;
   margin-bottom: 40px;
+  padding: 20px;
 }
 
+/* 3. 气泡基础样式 */
 .bubble {
   width: 120px;
   height: 120px;
@@ -249,43 +303,57 @@ onUnmounted(stopTimer);
   user-select: none;
 }
 
-.bubble:hover {
-  transform: translateY(-5px);
+.bubble.is-hidden {
+  /* 关键：隐藏内容但保留物理占位，防止位置移动 */
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none; /* 确保隐藏后无法再点击 */
+  transform: scale(0); /* 增加缩小的视觉效果 */
+  transition: all 0.3s ease;
 }
 
+.bubble:hover { transform: translateY(-5px); }
+
+/* 4. 💡 核心统一：气泡选中状态 */
 .bubble.selected {
   transform: scale(1.1);
+  /* 白色描边 + 蓝色光晕 */
   box-shadow: 0 0 0 4px #fff, 0 0 20px #409eff;
 }
 
-.bubble-text {
-  font-size: 0.9rem;
-  word-break: break-word;
+/* 5. 💡 核心统一：匹配成功状态 */
+.bubble.match-success {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 4px #fff, 0 0 25px #409eff; /* 稍微增强一点光晕 */
+  z-index: 11;
 }
 
-.game-actions {
-  text-align: center;
-  margin-bottom: 20px;
+.bubble-text { font-size: 1rem; line-height: 1.2; word-break: break-word; }
+
+/* 6. 💡 核心统一：SVG 连线层 */
+.connection-layer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 10;
 }
 
-.empty-tip {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* 移除原来的 margin-top */
+.connection-line {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawLine 0.4s ease forwards;
+  /* 💡 连线光晕颜色与气泡 box-shadow 一致 */
+  stroke-width: 6px; /* 稍微细一点显得更精准 */
+  filter: drop-shadow(0 0 5px rgba(64, 158, 255, 0.8));
 }
 
-.goto-upload-btn {
-  margin-top: -10px; /* 稍微向上靠拢 empty 图片 */
-}
+@keyframes drawLine { to { stroke-dashoffset: 0; } }
 
-.game-over-content {
-  text-align: center;
-}
-
-.over-time {
-  font-size: 2rem;
-  color: #f56c6c;
-  margin: 20px 0;
-}
+/* 7. 其他 UI 样式 */
+.game-actions { text-align: center; margin-bottom: 20px; }
+.empty-tip { display: flex; flex-direction: column; align-items: center; }
+.goto-upload-btn { margin-top: -10px; }
+.game-over-content { text-align: center; }
+.over-time { font-size: 2rem; color: #f56c6c; margin: 20px 0; }
 </style>
