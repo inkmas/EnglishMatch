@@ -5,6 +5,8 @@
 
       <div class="timer-box">
         游戏用时：<span class="timer-text">{{ formattedTime }}</span>
+        <span class="divider"> | </span>
+        错误次数：<span class="wrong-text">{{ wrongCount }}</span>
       </div>
 
       <div class="bubble-container" ref="containerRef">
@@ -64,6 +66,7 @@
     >
       <div class="game-over-content">
         <p class="over-time">总用时：{{ formattedTime }}</p>
+        <p class="over-wrong">错误次数：{{ wrongCount }} 次</p>
         <p class="over-count">共匹配 {{ vocabStore.vocabList.length }} 组词汇</p>
         <el-button type="primary" size="large" @click="restartGame">再来一局</el-button>
       </div>
@@ -99,6 +102,8 @@ const bubbleRefs = ref<any[]>([]); // 存储气泡的 DOM 引用
 const lineCoords = ref<{ x1: number, y1: number, x2: number, y2: number } | null>(null);
 const isMatchSuccess = ref(false);
 
+const wrongCount = ref(0);
+
 const formattedTime = computed(() => {
   const m = Math.floor(elapsedSeconds.value / 60).toString().padStart(2, '0');
   const s = (elapsedSeconds.value % 60).toString().padStart(2, '0');
@@ -123,6 +128,7 @@ const initGame = () => {
   gameStarted.value = false;
   elapsedSeconds.value = 0;
   gameOverVisible.value = false;
+  wrongCount.value = 0;
   stopTimer();
 
   if (vocabStore.vocabList.length === 0) return;
@@ -191,6 +197,7 @@ const handleBubbleClick = (index: number) => {
       }, 550);
     } else {
       // ❌ 匹配失败：500ms 后清空选中状态
+      wrongCount.value++;
       setTimeout(() => {
         selectedIndexes.value = [];
       }, 500);
@@ -356,4 +363,20 @@ onUnmounted(stopTimer);
 .goto-upload-btn { margin-top: -10px; }
 .game-over-content { text-align: center; }
 .over-time { font-size: 2rem; color: #f56c6c; margin: 20px 0; }
+
+.divider {
+  margin: 0 15px;
+  color: #dcdfe6;
+}
+
+.wrong-text {
+  color: #f56c6c; /* 使用红色提醒错误 */
+  font-weight: bold;
+}
+
+.over-wrong {
+  font-size: 1.2rem;
+  color: #606266;
+  margin-bottom: 10px;
+}
 </style>
