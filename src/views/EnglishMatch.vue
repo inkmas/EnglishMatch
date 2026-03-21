@@ -29,6 +29,7 @@
             :class="{
               selected: selectedIndexes.includes(index),
               'match-success': isMatchSuccess && selectedIndexes.includes(index),
+              'match-error': isMatchError && selectedIndexes.includes(index),
               'is-hidden': hiddenIndexes.includes(index)
             }"
             :style="{ backgroundColor: item.color }"
@@ -103,6 +104,7 @@ const lineCoords = ref<{ x1: number, y1: number, x2: number, y2: number } | null
 const isMatchSuccess = ref(false);
 
 const wrongCount = ref(0);
+const isMatchError = ref(false);
 
 const formattedTime = computed(() => {
   const m = Math.floor(elapsedSeconds.value / 60).toString().padStart(2, '0');
@@ -155,6 +157,9 @@ const handleBubbleClick = (index: number) => {
   // 1. 基础拦截：已选中或已隐藏的不触发
   if (selectedIndexes.value.includes(index) || hiddenIndexes.value.includes(index)) return;
 
+  // 如果正在播放错误抖动动画，不允许点击，防止连续操作导致状态混乱
+  if (isMatchError.value) return;
+
   // 2. 第一次点击启动计时
   if (!gameStarted.value) startTimer();
 
@@ -198,8 +203,10 @@ const handleBubbleClick = (index: number) => {
     } else {
       // ❌ 匹配失败：500ms 后清空选中状态
       wrongCount.value++;
+      isMatchError.value = true;
       setTimeout(() => {
         selectedIndexes.value = [];
+        isMatchError.value = false;
       }, 500);
     }
   }
@@ -378,5 +385,12 @@ onUnmounted(stopTimer);
   font-size: 1.2rem;
   color: #606266;
   margin-bottom: 10px;
+}
+
+.bubble.match-error {
+  box-shadow: 0 0 0 4px #fff, 0 0 25px #f56c6c !important;
+  transform: scale(1.1) !important;
+  z-index: 11;
+  transition: box-shadow 0.2s ease, transform 0.2s ease !important;
 }
 </style>
