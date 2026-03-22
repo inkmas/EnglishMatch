@@ -21,13 +21,25 @@
         </div>
 
         <el-divider>快速操作</el-divider>
-        <div class="button-group">
+        <div class="button-group rule-grid">
           <el-button type="primary" @click="pickRandom(5)" :disabled="isSpinning">随机选 5 人</el-button>
           <el-button type="success" @click="pickRandom(10)" :disabled="isSpinning">随机选 10 人</el-button>
           <el-button @click="studentStore.currentStudents = []" :disabled="isSpinning" class="full-btn">清空转盘</el-button>
         </div>
 
-        <div class="list-title">🎯 待抽奖学号 ({{ studentStore.currentStudents.length }}/10)</div>
+        <el-divider>按规则筛选</el-divider>
+        <div class="button-group rule-grid">
+          <el-button @click="pickByRule(4)" :disabled="isSpinning">4的倍数</el-button>
+          <el-button @click="pickByRule(5)" :disabled="isSpinning">5的倍数</el-button>
+          <el-button @click="pickByRule(6)" :disabled="isSpinning">6的倍数</el-button>
+          <el-button @click="pickByRule(7)" :disabled="isSpinning">7的倍数</el-button>
+          <el-button @click="pickByRule(8)" :disabled="isSpinning">8的倍数</el-button>
+          <el-button @click="pickByRule(9)" :disabled="isSpinning">9的倍数</el-button>
+          <el-button type="warning" @click="pickByRule('prime')" :disabled="isSpinning">素数学号</el-button>
+          <el-button type="info" @click="studentStore.currentStudents = []" :disabled="isSpinning">清空转盘</el-button>
+        </div>
+
+        <div class="list-title">🎯 待抽奖学号 ({{ studentStore.currentStudents.length }})</div>
         <div class="selected-list">
           <el-tag
               v-for="(name, index) in studentStore.currentStudents"
@@ -78,14 +90,46 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-// 确保这里的路径和你新建的文件名一致
-import { useStudentStore } from '@/stores/students'
+import { useStudentStore } from '@/stores/students.ts'
 import { ElMessage } from 'element-plus'
 
 const studentStore = useStudentStore()
 const isSpinning = ref(false)
 const rotation = ref(0)
 const winner = ref("")
+
+// 判断是否为素数
+const isPrime = (num: number) => {
+  if (num < 2) return false;
+  for (let i = 2; i <= Math.sqrt(num); i++) {
+    if (num % i === 0) return false;
+  }
+  return true;
+};
+
+// 根据数学规则筛选
+const pickByRule = (rule: number | 'prime') => {
+  let selected: string[] = [];
+
+  if (rule === 'prime') {
+    // 筛选素数（假设学号是字符串，需转为数字判断）
+    selected = studentStore.allStudents.filter(name => isPrime(parseInt(name)));
+  } else {
+    // 筛选倍数 (4, 5, 6...)
+    selected = studentStore.allStudents.filter(name => parseInt(name) % rule === 0);
+  }
+
+  if (selected.length === 0) {
+    ElMessage.info('未找到符合条件的学号');
+    return;
+  }
+
+  // 更新到转盘
+  studentStore.setStudents(selected);
+  winner.value = "";
+  rotation.value = 0;
+  ElMessage.success(`已加载 ${selected.length} 个符合条件的学号`);
+};
 
 // 随机选择逻辑
 const pickRandom = (count: number) => {
@@ -170,4 +214,22 @@ const startSpin = () => {
 
 .winner-box { margin-top: 20px; padding: 15px; background: #fef0f0; border-radius: 8px; border: 1px solid #fde2e2; }
 .winner-name { color: #f56c6c; font-size: 32px; font-weight: bold; }
+
+.rule-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.rule-grid .el-button {
+  width: 100%;
+  margin: 0 !important;
+  box-sizing: border-box;
+}
+
+.full-btn {
+  grid-column: span 2;
+}
 </style>
