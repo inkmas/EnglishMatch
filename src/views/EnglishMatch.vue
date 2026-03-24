@@ -90,6 +90,11 @@ interface BubbleItem {
   color: string;
 }
 
+const PRESET_COLORS = [
+  '#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#9b59b6', '#34495e', '#16a085', '#e74c3c',
+  '#2ecc71', '#d35400', '#c0392b', '#1dd1a1', '#ff9f43', '#5f27cd', '#22a6b3', '#3ae374'
+];
+
 const bubbleList = ref<BubbleItem[]>([]);
 const selectedIndexes = ref<number[]>([]);
 const hiddenIndexes = ref<number[]>([]);
@@ -112,9 +117,13 @@ const formattedTime = computed(() => {
   return `${m}:${s}`;
 });
 
-const getRandomColor = () => {
-  const hue = Math.floor(Math.random() * 360);
-  return `hsl(${hue}, 70%, 60%)`;
+const shuffleArray = <T>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+  }
+  return shuffled;
 };
 
 const stopTimer = () => {
@@ -135,14 +144,26 @@ const initGame = () => {
 
   if (vocabStore.vocabList.length === 0) return;
 
+  const count = vocabStore.vocabList.length;
   const bubbleItems: BubbleItem[] = [];
-  vocabStore.vocabList.forEach((item) => {
-    const color = getRandomColor();
-    bubbleItems.push({ text: item.en, pair: item.cn, color });
-    bubbleItems.push({ text: item.cn, pair: item.en, color });
+
+  let enColors = shuffleArray(PRESET_COLORS);
+  let cnColors = shuffleArray(PRESET_COLORS);
+
+  if (count > PRESET_COLORS.length) {
+    enColors = Array(Math.ceil(count / PRESET_COLORS.length)).fill(enColors).flat();
+    cnColors = Array(Math.ceil(count / PRESET_COLORS.length)).fill(cnColors).flat();
+  }
+
+  vocabStore.vocabList.forEach((item, index) => {
+    const enColor = enColors[index % enColors.length]!;
+    const cnColor = cnColors[index % cnColors.length]!;
+
+    bubbleItems.push({ text: item.en, pair: item.cn, color: enColor });
+    bubbleItems.push({ text: item.cn, pair: item.en, color: cnColor });
   });
 
-  bubbleList.value = bubbleItems.sort(() => Math.random() - 0.5);
+  bubbleList.value = shuffleArray(bubbleItems);
 };
 
 const startTimer = () => {
