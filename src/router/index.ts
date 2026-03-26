@@ -1,7 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import EnglishMatch from "@/views/EnglishMatch.vue";
 import VocabUpload from "@/views/VocabUpload.vue";
-import Settings from "@/views/Settings.vue";
 import SingleWheel from "@/views/wheel/SingleWheel.vue";
 import MultipleWheel from "@/views/wheel/MultipleWheel.vue";
 import Debug from "@/views/Debug.vue";
@@ -39,11 +38,6 @@ const router = createRouter({
       path: '/upload',
       name: 'upload',
       component: VocabUpload
-    },
-    {
-      path: '/settings',
-      name: 'settings',
-      component: Settings
     },
     {
       path: '/debug',

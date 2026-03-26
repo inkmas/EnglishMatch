@@ -1,5 +1,8 @@
 <template>
   <div class="main-container">
+    <SettingsButton class="settings-button" @click="openDialog" />
+    <WheelSettingsDialog v-model="showSettings" />
+
     <div class="aside-panel">
       <el-card shadow="hover">
         <template #header>
@@ -92,11 +95,15 @@
 import { ref, computed } from 'vue'
 import { useStudentStore } from '@/stores/students.ts'
 import { ElMessage } from 'element-plus'
+import SettingsButton from "@/components/SettingsButton.vue";
+import WheelSettingsDialog from "@/views/wheel/WheelSettingsDialog.vue";
 
 const studentStore = useStudentStore()
 const isSpinning = ref(false)
 const rotation = ref(0)
 const winner = ref("")
+
+const showSettings = ref(false)
 
 // 判断是否为素数
 const isPrime = (num: number) => {
@@ -192,11 +199,17 @@ const startSpin = () => {
     }
   }, 4000)
 }
+
+const openDialog = () => {
+  showSettings.value = true
+}
 </script>
 
 <style scoped>
-/* 样式部分也同步更新了类名，保持语义统一 */
-.main-container { display: flex; justify-content: center; gap: 40px; padding: 20px; }
+.main-container {
+  display: flex; justify-content: center; gap: 40px; padding: 20px;
+  position: relative;
+}
 .aside-panel { width: 350px; }
 .student-library { height: 200px; overflow-y: auto; border: 1px solid #ebeef5; padding: 10px; border-radius: 8px; background: #fafafa; }
 .library-scroll-node { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -231,5 +244,11 @@ const startSpin = () => {
 
 .full-btn {
   grid-column: span 2;
+}
+
+.settings-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }
 </style>

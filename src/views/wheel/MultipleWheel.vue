@@ -1,5 +1,8 @@
 <template>
   <div class="main-container">
+    <SettingsButton class="settings-button" @click="openDialog" />
+    <WheelSettingsDialog v-model="showSettings" />
+
     <div class="aside-panel">
       <el-card shadow="hover">
         <template #header>
@@ -109,6 +112,8 @@
 import { ref, computed } from 'vue'
 import { useStudentStore } from '@/stores/students.ts'
 import { ElMessage } from 'element-plus'
+import SettingsButton from "@/components/SettingsButton.vue";
+import WheelSettingsDialog from "@/views/wheel/WheelSettingsDialog.vue";
 
 // 1. 定义可选的规则池
 const MULTIPLE_RULES = [
@@ -143,6 +148,8 @@ const isSpinning = ref(false)
 const rotation = ref(0)
 const winner = ref("")
 
+const showSettings = ref(false)
+
 // 判断是否为素数
 const isPrime = (num: number) => {
   if (num < 2) return false;
@@ -165,30 +172,6 @@ const switchMode = (mode: 'multiple' | 'content') => {
 
   ElMessage.success(`已切换至${mode === 'multiple' ? '倍数' : '数字包含'}模式`)
 }
-
-// 根据数学规则筛选
-const pickByRule = (rule: number | 'prime') => {
-  let selected: string[] = [];
-
-  if (rule === 'prime') {
-    // 筛选素数（假设学号是字符串，需转为数字判断）
-    selected = studentStore.allStudents.filter(name => isPrime(parseInt(name)));
-  } else {
-    // 筛选倍数 (4, 5, 6...)
-    selected = studentStore.allStudents.filter(name => parseInt(name) % rule === 0);
-  }
-
-  if (selected.length === 0) {
-    ElMessage.info('未找到符合条件的学号');
-    return;
-  }
-
-  // 更新到转盘
-  studentStore.setStudents(selected);
-  winner.value = "";
-  rotation.value = 0;
-  ElMessage.success(`已加载 ${selected.length} 个符合条件的学号`);
-};
 
 // 转盘扇区颜色计算
 const wheelStyle = computed(() => {
@@ -257,6 +240,10 @@ const startSpin = () => {
     }
   }, 4000)
 }
+
+const openDialog = () => {
+  showSettings.value = true
+}
 </script>
 
 <style scoped>
@@ -267,6 +254,7 @@ const startSpin = () => {
   gap: 40px;
   padding: 20px;
   width: 100%;
+  position: relative;
 }
 
 .aside-panel {
@@ -366,5 +354,11 @@ const startSpin = () => {
   color: #909399;
   font-size: 13px;
   margin: 0;
+}
+
+.settings-button {
+  position: absolute;
+  top: 10px;
+  right: 60px;
 }
 </style>

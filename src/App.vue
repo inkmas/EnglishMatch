@@ -21,7 +21,6 @@
       </el-menu-item>
     </el-sub-menu>
     <el-menu-item index="/upload" >单词文件上传</el-menu-item>
-    <el-menu-item index="/settings">设置</el-menu-item>
     <el-menu-item index="/debug">Debug</el-menu-item>
     <el-menu-item index="5" disabled>更多功能...</el-menu-item>
   </el-menu>
