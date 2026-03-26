@@ -4,6 +4,7 @@ import VocabUpload from "@/views/VocabUpload.vue";
 import Settings from "@/views/Settings.vue";
 import SingleWheel from "@/views/wheel/SingleWheel.vue";
 import MultipleWheel from "@/views/wheel/MultipleWheel.vue";
+import Debug from "@/views/Debug.vue";
 
 const router = createRouter({
   // 使用 Hash 模式，方便单文件打包后双击运行
@@ -43,6 +44,11 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: Settings
+    },
+    {
+      path: '/debug',
+      name: 'debug',
+      component: Debug
     },
   ]
 })
