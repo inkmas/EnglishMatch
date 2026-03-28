@@ -65,6 +65,16 @@
         :close-on-click-modal="false"
         :show-close="false"
     >
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img
+            :src="currentPokemon.url"
+            alt="Pokemon"
+            style="width: 160px; height: 160px; object-fit: contain; border-radius: 12px;"
+        >
+        <p style="margin-top: 10px; font-size: 17px; font-weight: bold; color: #3c9cff;">
+          {{ currentPokemon.text }}
+        </p>
+      </div>
       <div class="game-over-content">
         <p class="over-time">总用时：{{ formattedTime }}</p>
         <p class="over-wrong">错误次数：{{ wrongCount }} 次</p>
@@ -80,6 +90,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { ElDialog, ElButton, ElEmpty, ElMessage, ElMessageBox } from 'element-plus';
 import { useVocabStore } from '@/stores/vocab';
 import { useRouter } from 'vue-router';
+import { getAssetPath } from "@/utils/path.ts";
 
 const router = useRouter();
 const vocabStore = useVocabStore();
@@ -94,6 +105,21 @@ const PRESET_COLORS = [
   '#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#9b59b6', '#34495e', '#16a085', '#e74c3c',
   '#2ecc71', '#d35400', '#c0392b', '#1dd1a1', '#ff9f43', '#5f27cd', '#22a6b3', '#3ae374'
 ];
+
+const pokemonData = [
+  {
+    url: getAssetPath('/assets/images/谢米-天空形态.png'),
+    text: '谢米觉得你很帅气！✨'
+  },
+  {
+    url: getAssetPath('/assets/images/科斯莫古.png'),
+    text: '科斯莫古觉得你很帅气~ 🌌'
+  },
+  {
+    url: getAssetPath('/assets/images/托戈德玛尔.png'),
+    text: '托戈德玛尔觉得你很厉害~ ⚡️'
+  },
+]
 
 const bubbleList = ref<BubbleItem[]>([]);
 const selectedIndexes = ref<number[]>([]);
@@ -110,6 +136,8 @@ const isMatchSuccess = ref(false);
 
 const wrongCount = ref(0);
 const isMatchError = ref(false);
+
+const currentPokemon = ref(pokemonData[0]!)
 
 const formattedTime = computed(() => {
   const m = Math.floor(elapsedSeconds.value / 60).toString().padStart(2, '0');
@@ -218,6 +246,9 @@ const handleBubbleClick = (index: number) => {
 
         if (hiddenIndexes.value.length === bubbleList.value.length) {
           stopTimer();
+
+          setRandomPokemon()
+
           gameOverVisible.value = true;
         }
       }, 550);
@@ -274,6 +305,11 @@ const resetGame = () => {
 const handleGotoUpload = () => {
   router.push('/upload'); // 确保这里的路径和你 router 配置的一致
 };
+
+const setRandomPokemon = () => {
+  const randomIndex = Math.floor(Math.random() * pokemonData.length)
+  currentPokemon.value = pokemonData[randomIndex]!
+}
 
 watch(() => vocabStore.vocabList, (list) => {
   if (list.length) initGame();
