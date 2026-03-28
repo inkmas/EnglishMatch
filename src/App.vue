@@ -3,7 +3,6 @@
       :default-active="activeIndex"
       class="el-menu-demo"
       mode="horizontal"
-      @select="handleSelect"
       router
   >
     <el-menu-item index="/english">英语消消乐</el-menu-item>
@@ -20,8 +19,9 @@
         <template #title>多人模式 (Multiple)</template>
       </el-menu-item>
     </el-sub-menu>
-    <el-menu-item index="/upload" >单词文件上传</el-menu-item>
-    <el-menu-item index="/debug">Debug</el-menu-item>
+    <el-menu-item index="/upload">单词文件上传</el-menu-item>
+    <el-menu-item index="/films">观革命历史，做红色青年</el-menu-item>
+<!--    <el-menu-item index="/debug">Debug</el-menu-item>-->
     <el-menu-item index="5" disabled>更多功能...</el-menu-item>
   </el-menu>
 
@@ -38,10 +38,6 @@ const activeIndex = computed(() => {
   const { path } = route
   return path
 })
-
-const handleSelect = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath)
-}
 </script>
 
 <style>
