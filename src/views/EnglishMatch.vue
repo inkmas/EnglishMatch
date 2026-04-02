@@ -1,7 +1,7 @@
 <template>
   <div class="english-match-container" :class="{ 'is-empty': !vocabStore.vocabList.length }">
     <div class="game-main" v-if="vocabStore.vocabList.length">
-      <h1 class="game-title">🎮 英语消消乐</h1>
+      <h1 class="game-title">🎮 {{ vocabStore.vocabTitle || '单词消消乐' }}</h1>
 
       <div class="timer-box">
         游戏用时：<span class="timer-text">{{ formattedTime }}</span>

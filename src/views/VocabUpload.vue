@@ -81,6 +81,11 @@ import { UploadFilled, List } from '@element-plus/icons-vue';
 import { useVocabStore } from '@/stores/vocab';
 import type { VocabItem } from '@/stores/vocab';
 
+interface ParseResult {
+  title: string;
+  list: VocabItem[];
+}
+
 const router = useRouter();
 const vocabStore = useVocabStore();
 
@@ -104,8 +109,9 @@ const beforeUpload = (file: File) => {
   return true;
 };
 
-const parseTxtFile = async (file: File): Promise<VocabItem[]> => {
+const parseTxtFile = async (file: File): Promise<ParseResult> => {
   try {
+    const fileTitle = file.name.replace(/\.txt$/i, "");
     const content = await file.text();
     const lines = content.split('\n').filter(line => line.trim());
     const vocabList: VocabItem[] = [];
@@ -136,7 +142,11 @@ const parseTxtFile = async (file: File): Promise<VocabItem[]> => {
     if (vocabList.length === 0) {
       throw new Error('未解析到有效词汇，请检查文件格式！');
     }
-    return vocabList;
+
+    return {
+      title: fileTitle,
+      list: vocabList
+    };
   } catch (error) {
     throw new Error(`文件解析失败：${(error as Error).message}`);
   }
@@ -147,12 +157,12 @@ const handleFileChange = async (uploadFile: any) => {
   if (!file) return;
 
   try {
-    const newVocabList = await parseTxtFile(file);
-    vocabStore.setVocabList(newVocabList);
+    const { title, list } = await parseTxtFile(file);
+    vocabStore.setVocabList(list, title);
 
     // 💡 1. 顶部弹出提示框
     ElMessage({
-      message: `成功导入 ${newVocabList.length} 组词汇！`,
+      message: `成功导入词库《${title}》，共 ${list.length} 组词汇！`,
       type: 'success',
       duration: 3000
     });
