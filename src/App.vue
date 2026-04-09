@@ -20,7 +20,24 @@
       </el-menu-item>
     </el-sub-menu>
     <el-menu-item index="/upload">单词文件上传</el-menu-item>
-<!--    <el-menu-item index="/debug">Debug</el-menu-item>-->
+    <el-sub-menu index="/chart">
+      <template #title>
+        <span>模考图表</span>
+      </template>
+
+      <el-menu-item index="/chart/bar">
+        <template #title>Bar Chart</template>
+      </el-menu-item>
+
+      <el-menu-item index="/chart/pie">
+        <template #title>Pie Chart</template>
+      </el-menu-item>
+
+      <el-menu-item index="/chart/line">
+        <template #title>Line Chart</template>
+      </el-menu-item>
+    </el-sub-menu>
+    <el-menu-item index="/debug">Debug</el-menu-item>
     <el-menu-item index="5" disabled>更多功能...</el-menu-item>
   </el-menu>
 
