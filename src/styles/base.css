@@ -1,0 +1,14 @@
+html, body {
+    font-family: sans-serif;
+    margin: 0;        /* 移除默认的 8px 外边距 */
+    padding: 0;       /* 移除可能的内边距 */
+    width: 100vw;     /* 宽度占满视口 */
+    height: 100vh;    /* 高度占满视口 */
+    overflow: hidden; /* 禁止浏览器原生滚动条 */
+}
+
+#app {
+    height: 100vh;
+    display: flex;          /* 开启 flex 布局 */
+    flex-direction: column; /* 让菜单和滚动区上下排列 */
+}

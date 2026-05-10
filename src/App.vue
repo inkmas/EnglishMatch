@@ -24,7 +24,13 @@
     <el-menu-item index="5" disabled>更多功能...</el-menu-item>
   </el-menu>
 
-  <router-view></router-view>
+  <el-scrollbar class="scroll-view">
+    <router-view v-slot="{ Component, route }">
+      <KeepAlive>
+        <component :is="Component" :key="route.path" />
+      </KeepAlive>
+    </router-view>
+  </el-scrollbar>
 </template>
 
 <script lang="ts" setup>
@@ -39,5 +45,9 @@ const activeIndex = computed(() => {
 })
 </script>
 
-<style>
+<style scoped>
+.scroll-view {
+  flex: 1;
+  background-color: #f5f7fa;
+}
 </style>
