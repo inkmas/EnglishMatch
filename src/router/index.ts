@@ -5,9 +5,6 @@ import SingleWheel from "@/views/wheel/SingleWheel.vue";
 import MultipleWheel from "@/views/wheel/MultipleWheel.vue";
 import Debug from "@/views/Debug.vue";
 import FilmWatch from "@/views/FilmWatch.vue";
-import LineChartView from "@/views/chart/LineChartView.vue";
-import PieChartView from "@/views/chart/PieChartView.vue";
-import BarChartView from "@/views/chart/BarChartView.vue";
 
 const router = createRouter({
   // 使用 Hash 模式，方便单文件打包后双击运行
@@ -47,27 +44,6 @@ const router = createRouter({
       path: '/films',
       name: 'films',
       component: FilmWatch
-    },
-    {
-      path: '/chart',
-      name: 'chart',
-      children: [
-        {
-          path: 'bar',
-          name: 'bar-chart',
-          component: BarChartView
-        },
-        {
-          path: 'pie',
-          name: 'pie-chart',
-          component: PieChartView
-        },
-        {
-          path: 'line',
-          name: 'line-chart',
-          component: LineChartView
-        },
-      ]
     },
     {
       path: '/debug',
